@@ -1,0 +1,48 @@
+# RedoxGuard Configuration
+# Developed by Kyssta
+
+# Debug mode - enables additional logging
+debug: false
+
+# Notify staff - sends violation notifications to players with redoxguard.notify permission
+notify-staff: true
+
+# Log violations - logs violations to the console
+log-violations: true
+
+# Discord webhook - sends violation alerts to a Discord channel
+discord-webhook:
+  # Enable Discord webhook alerts
+  enabled: false
+  # Discord webhook URL
+  url: ""
+
+# Violation decay - reduces violation levels over time
+violation-decay:
+  enabled: true
+  # Time in seconds between decay checks
+  interval: 60
+  # Amount to reduce violations by each interval
+  amount: 1
+
+# Latency compensation - adjusts checks based on player ping
+latency-compensation:
+  enabled: true
+  # Maximum ping to compensate for (in ms)
+  max-ping: 500
+
+# Exemptions
+exemptions:
+  # Exempt players using Geyser/Floodgate (Bedrock players)
+  bedrock-players: true
+  # Exempt players in creative mode
+  creative-mode: false
+  # Exempt players in spectator mode
+  spectator-mode: true
+
+# Advanced settings
+advanced:
+  # Maximum TPS drop before reducing check sensitivity
+  min-tps: 17.5
+  # How much to reduce check sensitivity when TPS is low (0.0-1.0)
+  low-tps-sensitivity: 0.75

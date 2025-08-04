@@ -1,0 +1,18 @@
+name: RedoxGuard
+version: 1.0.0
+main: com.kyssta.redoxguard.RedoxGuard
+api-version: 1.13
+authors: [Kyssta]
+description: An advanced anticheat solution for Minecraft servers
+commands:
+  redoxguard:
+    description: Main command for RedoxGuard
+    aliases: [rg]
+    permission: redoxguard.admin
+permissions:
+  redoxguard.admin:
+    description: Allows access to all RedoxGuard commands
+    default: op
+  redoxguard.bypass:
+    description: Bypasses all RedoxGuard checks
+    default: false
