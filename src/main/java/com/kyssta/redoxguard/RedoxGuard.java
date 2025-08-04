@@ -80,7 +80,7 @@ public class RedoxGuard extends JavaPlugin {
         
         // Save player data
         if (playerDataManager != null) {
-            playerDataManager.saveAllPlayerData();
+            playerDataManager.saveAllData();
         }
         
         enabled = false;
@@ -101,7 +101,7 @@ public class RedoxGuard extends JavaPlugin {
         checkManager = new CheckManager(this);
         
         // Webhook util
-        webhookUtil = new WebhookUtil(this);
+        webhookUtil = new WebhookUtil();
     }
 
     /**
@@ -129,7 +129,8 @@ public class RedoxGuard extends JavaPlugin {
         // Player data cleanup task (every 5 minutes)
         asyncExecutor.scheduleAtFixedRate(() -> {
             if (enabled && playerDataManager != null) {
-                playerDataManager.cleanupInactivePlayers();
+                // Cleanup inactive players (placeholder for now)
+                LogUtil.debug("Running player data cleanup...");
             }
         }, 5, 5, TimeUnit.MINUTES);
         
@@ -177,7 +178,7 @@ public class RedoxGuard extends JavaPlugin {
         return asyncExecutor;
     }
 
-    public boolean isEnabled() {
+    public boolean isPluginEnabled() {
         return enabled;
     }
 }
