@@ -66,6 +66,36 @@ public class CheckConfig {
     }
     
     /**
+     * Get a double value from the check configuration (alias for getDoubleValue)
+     * @param path The path to the value
+     * @param defaultValue The default value if the path doesn't exist
+     * @return The double value at the path
+     */
+    public double getDouble(String path, double defaultValue) {
+        return config.getDouble(path, defaultValue);
+    }
+    
+    /**
+     * Get a long value from the check configuration
+     * @param path The path to the value
+     * @param defaultValue The default value if the path doesn't exist
+     * @return The long value at the path
+     */
+    public long getLong(String path, long defaultValue) {
+        return config.getLong(path, defaultValue);
+    }
+    
+    /**
+     * Get an int value from the check configuration
+     * @param path The path to the value
+     * @param defaultValue The default value if the path doesn't exist
+     * @return The int value at the path
+     */
+    public int getInt(String path, int defaultValue) {
+        return config.getInt(path, defaultValue);
+    }
+    
+    /**
      * Save the check configuration
      */
     public void save() {

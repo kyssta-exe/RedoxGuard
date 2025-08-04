@@ -70,8 +70,8 @@ public class SpeedCheck extends Check {
         }
         
         // Adjust for slowness potion effect
-        if (player.hasPotionEffect(PotionEffectType.SLOW)) {
-            int level = player.getPotionEffect(PotionEffectType.SLOW).getAmplifier() + 1;
+        if (player.hasPotionEffect(PotionEffectType.SLOWNESS)) {
+            int level = player.getPotionEffect(PotionEffectType.SLOWNESS).getAmplifier() + 1;
             maxSpeed *= 1.0 - (level * 0.15); // Each level reduces speed by 15%
         }
         

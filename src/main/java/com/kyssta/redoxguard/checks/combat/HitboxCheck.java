@@ -2,6 +2,7 @@ package com.kyssta.redoxguard.checks.combat;
 
 import com.kyssta.redoxguard.RedoxGuard;
 import com.kyssta.redoxguard.checks.Check;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BoundingBox;
@@ -40,12 +41,9 @@ public class HitboxCheck extends Check {
                 .getDouble("hitbox.max-distance", 4.5);
         
         // Ray trace from the player's eyes
-        boolean hit = player.getEyeLocation().getDirection().normalize()
-                .multiply(maxDistance)
-                .toLocation(player.getWorld(), player.getEyeLocation().getX(), 
-                        player.getEyeLocation().getY(), player.getEyeLocation().getZ())
-                .toVector()
-                .isInBox(expandedBox);
+        Location endLocation = player.getEyeLocation().add(
+                player.getEyeLocation().getDirection().normalize().multiply(maxDistance));
+        boolean hit = expandedBox.contains(endLocation.getX(), endLocation.getY(), endLocation.getZ());
         
         if (!hit) {
             // Apply ping compensation
@@ -56,12 +54,9 @@ public class HitboxCheck extends Check {
             BoundingBox pingCompensatedBox = expandedBox.expand(
                     pingCompensation, pingCompensation, pingCompensation);
             
-            hit = player.getEyeLocation().getDirection().normalize()
-                    .multiply(maxDistance)
-                    .toLocation(player.getWorld(), player.getEyeLocation().getX(), 
-                            player.getEyeLocation().getY(), player.getEyeLocation().getZ())
-                    .toVector()
-                    .isInBox(pingCompensatedBox);
+            Location endLocationPing = player.getEyeLocation().add(
+                    player.getEyeLocation().getDirection().normalize().multiply(maxDistance));
+            hit = pingCompensatedBox.contains(endLocationPing.getX(), endLocationPing.getY(), endLocationPing.getZ());
             
             if (!hit) {
                 flag(player, "hit outside hitbox (distance too far)");

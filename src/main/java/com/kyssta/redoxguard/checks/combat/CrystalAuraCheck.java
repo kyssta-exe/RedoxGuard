@@ -93,7 +93,7 @@ public class CrystalAuraCheck extends Check {
      * @param entity The crystal entity
      */
     public void checkCrystalBreak(Player player, Entity entity) {
-        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.ENDER_CRYSTAL) {
+        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.END_CRYSTAL) {
             return;
         }
         
