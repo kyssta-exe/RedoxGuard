@@ -2,7 +2,7 @@
 
 ## 🛡️ Advanced Anti-Cheat System
 
-RedoxGuard is a comprehensive anti-cheat solution designed for Minecraft servers running Spigot 1.21.1+. This plugin provides robust detection against various types of cheating while maintaining fair gameplay through ping compensation and configurable thresholds.
+RedoxGuard is a comprehensive anti-cheat solution designed for Minecraft servers running Spigot 1.16-1.21.8. This plugin provides robust detection against various types of cheating while maintaining fair gameplay through ping compensation and configurable thresholds.
 
 ## ✨ Features
 
@@ -28,7 +28,7 @@ RedoxGuard is a comprehensive anti-cheat solution designed for Minecraft servers
 
 ## 🔧 Technical Details
 
-- **Compatibility**: Spigot 1.21.1+
+- **Compatibility**: Spigot 1.16-1.21.8
 - **Java Version**: 17+
 - **Performance**: Optimized for minimal server impact
 - **Configuration**: Comprehensive YAML-based configuration

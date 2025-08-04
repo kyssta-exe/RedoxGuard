@@ -97,7 +97,7 @@ public class FastBreakCheck extends Check {
         
         // Check the player's tool and apply efficiency enchantment
         ItemStack tool = player.getInventory().getItemInMainHand();
-                    int efficiencyLevel = tool.getEnchantmentLevel(Enchantment.EFFICIENCY);
+                    int efficiencyLevel = tool.getEnchantmentLevel(Enchantment.DIG_SPEED);
         
         // Calculate break time based on block hardness and tool
         float hardness = block.getType().getHardness();

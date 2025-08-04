@@ -44,8 +44,8 @@ public class FlyCheck extends Check {
             // Players can jump up to 0.42 blocks high normally
             // Check for jump boost potion effect
             double maxJumpHeight = 0.42;
-                    if (player.hasPotionEffect(PotionEffectType.JUMP_BOOST)) {
-            int level = player.getPotionEffect(PotionEffectType.JUMP_BOOST).getAmplifier() + 1;
+                    if (player.hasPotionEffect(PotionEffectType.JUMP)) {
+            int level = player.getPotionEffect(PotionEffectType.JUMP).getAmplifier() + 1;
                 maxJumpHeight += level * 0.1; // Each level adds 0.1 blocks to jump height
             }
             

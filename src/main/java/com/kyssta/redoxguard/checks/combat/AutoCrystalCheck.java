@@ -88,7 +88,7 @@ public class AutoCrystalCheck extends Check {
      * @param entity The crystal entity
      */
     public void checkCrystalBreak(Player player, Entity entity) {
-        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.END_CRYSTAL) {
+        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.ENDER_CRYSTAL) {
             return;
         }
         
@@ -174,7 +174,7 @@ public class AutoCrystalCheck extends Check {
      * @param entity The crystal entity
      */
     public void checkCrystalAngle(Player player, Entity entity) {
-        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.END_CRYSTAL) {
+        if (!isEnabled() || player.hasPermission("redoxguard.bypass") || entity.getType() != EntityType.ENDER_CRYSTAL) {
             return;
         }
         

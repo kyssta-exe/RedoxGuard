@@ -1,7 +1,7 @@
 name: RedoxGuard
 version: 1.0.0
 main: com.kyssta.redoxguard.RedoxGuard
-api-version: 1.13
+api-version: 1.16
 authors: [Kyssta]
 description: An advanced anticheat solution for Minecraft servers
 commands:
