@@ -8,7 +8,14 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class TriggerBotCheck extends Check {
+
+    private final Map<UUID, Integer> suspiciousHits = new HashMap<>();
+    private final Map<UUID, Long> lastHitTime = new HashMap<>();
 
     public TriggerBotCheck(RedoxGuard plugin) {
         super(plugin, "TriggerBot", "combat");
@@ -24,51 +31,50 @@ public class TriggerBotCheck extends Check {
             return;
         }
         
+        // Skip if target is not a player (triggerbot is mainly for PvP)
+        if (!(target instanceof Player)) {
+            return;
+        }
+        
         PlayerData data = getPlayerData(player);
-        
-        // Update combat data
-        data.updateCombat();
-        
-        // Check reaction time
-        checkReactionTime(player, data);
-        
-        // Check if player is looking at the target
-        checkLookingAtTarget(player, target);
-    }
-    
-    /**
-     * Check if a player's reaction time is suspiciously fast
-     * @param player The player
-     * @param data The player data
-     */
-    private void checkReactionTime(Player player, PlayerData data) {
-        int attackCount = data.getAttackCount();
-        long lastAttackTime = data.getLastAttackTime();
+        UUID uuid = player.getUniqueId();
         long currentTime = System.currentTimeMillis();
         
-        // Get minimum reaction time from config
-        long minReactionTime = plugin.getConfigManager().getCheckConfig("combat")
-                .getLong("triggerbot.min-reaction-time", 100);
-        
-        // Apply ping compensation
-        int ping = data.getPing();
-        long pingCompensation = Math.min(ping / 2, 50); // Cap at 50ms, use half of ping
-        
-        // Check if the player's reaction time is suspiciously fast
-        if (attackCount > 1 && (currentTime - lastAttackTime) < minReactionTime - pingCompensation) {
-            flag(player, "suspiciously fast reaction time (" + (currentTime - lastAttackTime) + "ms)");
+        // Check if player is looking at the target with suspicious precision
+        if (isLookingAtTarget(player, target)) {
+            // Check for suspiciously fast reaction time
+            Long lastHit = lastHitTime.get(uuid);
+            if (lastHit != null) {
+                long timeSinceLastHit = currentTime - lastHit;
+                
+                // Only flag if reaction time is suspiciously fast (less than 50ms)
+                // Normal human reaction time is 150-300ms, so 50ms is clearly cheating
+                if (timeSinceLastHit < 50) {
+                    int currentSuspicious = suspiciousHits.getOrDefault(uuid, 0);
+                    suspiciousHits.put(uuid, currentSuspicious + 1);
+                    
+                    // Only flag after multiple suspicious hits
+                    if (currentSuspicious >= 5) {
+                        flag(player, "suspiciously fast reaction time (" + timeSinceLastHit + "ms)");
+                        debug(player.getName() + " had suspiciously fast reaction time: " + timeSinceLastHit + "ms");
+                    }
+                }
+            }
             
-            debug(player.getName() + " had suspiciously fast reaction time: " + 
-                    (currentTime - lastAttackTime) + "ms (min: " + (minReactionTime - pingCompensation) + "ms)");
+            lastHitTime.put(uuid, currentTime);
+        } else {
+            // Reset suspicious hits if player is not looking at target
+            suspiciousHits.put(uuid, Math.max(0, suspiciousHits.getOrDefault(uuid, 0) - 1));
         }
     }
     
     /**
-     * Check if a player is looking at the target they're attacking with suspicious precision
+     * Check if a player is looking at the target they're attacking
      * @param player The player
      * @param target The entity being attacked
+     * @return true if player is looking at target
      */
-    private void checkLookingAtTarget(Player player, Entity target) {
+    private boolean isLookingAtTarget(Player player, Entity target) {
         // Calculate the angle between the player's look vector and the vector to the target
         Location playerLoc = player.getEyeLocation();
         Vector playerDir = playerLoc.getDirection();
@@ -78,17 +84,8 @@ public class TriggerBotCheck extends Check {
         
         double angle = Math.toDegrees(Math.acos(playerDir.dot(toTarget)));
         
-        // Get maximum angle from config
-        double maxAngle = plugin.getConfigManager().getCheckConfig("combat")
-                .getDouble("triggerbot.max-angle", 5.0);
-        
-        // TriggerBot users typically have very precise aim
-        // If the angle is suspiciously small, flag it
-        if (angle < maxAngle) {
-            flag(player, "suspiciously precise aim (angle: " + String.format("%.2f", angle) + "°)");
-            
-            debug(player.getName() + " had suspiciously precise aim: angle = " + 
-                    String.format("%.2f", angle) + "° (max: " + maxAngle + "°)");
-        }
+        // Much more generous angle - only flag if angle is suspiciously small (less than 2 degrees)
+        // This means the player is looking almost directly at the target
+        return angle < 2.0;
     }
 }

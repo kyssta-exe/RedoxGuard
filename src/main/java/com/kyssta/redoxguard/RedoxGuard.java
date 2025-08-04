@@ -1,88 +1,183 @@
 package com.kyssta.redoxguard;
 
-import com.kyssta.redoxguard.commands.RedoxGuardCommand;
 import com.kyssta.redoxguard.config.ConfigManager;
-import com.kyssta.redoxguard.listeners.PlayerConnectionListener;
-import com.kyssta.redoxguard.listeners.PlayerMovementListener;
+import com.kyssta.redoxguard.data.PlayerData;
 import com.kyssta.redoxguard.managers.CheckManager;
 import com.kyssta.redoxguard.managers.PlayerDataManager;
+import com.kyssta.redoxguard.listeners.PlayerConnectionListener;
+import com.kyssta.redoxguard.listeners.PlayerMovementListener;
 import com.kyssta.redoxguard.utils.LogUtil;
 import com.kyssta.redoxguard.utils.VersionCompatibility;
+import com.kyssta.redoxguard.utils.WebhookUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class RedoxGuard extends JavaPlugin {
-    
+
     private static RedoxGuard instance;
+    
+    // Managers
     private ConfigManager configManager;
     private PlayerDataManager playerDataManager;
     private CheckManager checkManager;
     
+    // Async processing
+    private ScheduledExecutorService asyncExecutor;
+    
+    // Webhook
+    private WebhookUtil webhookUtil;
+    
+    // Plugin state
+    private boolean enabled = false;
+
     @Override
     public void onEnable() {
-        // Set instance
         instance = this;
+        
+        LogUtil.info("Starting RedoxGuard v2.0 - Advanced Anti-Cheat System");
+        
+        // Initialize async executor
+        asyncExecutor = Executors.newScheduledThreadPool(4);
         
         // Initialize version compatibility
         VersionCompatibility.init();
         
         // Initialize managers
-        this.configManager = new ConfigManager(this);
-        this.playerDataManager = new PlayerDataManager(this);
-        this.checkManager = new CheckManager(this);
-        
-        // Register commands
-        getCommand("redoxguard").setExecutor(new RedoxGuardCommand(this));
+        initializeManagers();
         
         // Register listeners
-        Bukkit.getPluginManager().registerEvents(new PlayerConnectionListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerMovementListener(this), this);
+        registerListeners();
         
-        // Log startup
-        LogUtil.info("RedoxGuard v" + getDescription().getVersion() + " has been enabled!");
-        LogUtil.info("Developed by Kyssta");
+        // Register commands
+        registerCommands();
+        
+        // Start async tasks
+        startAsyncTasks();
+        
+        enabled = true;
+        LogUtil.info("RedoxGuard v2.0 has been enabled successfully!");
     }
-    
+
     @Override
     public void onDisable() {
-        // Save data and clean up
-        if (playerDataManager != null) {
-            playerDataManager.saveAllData();
+        LogUtil.info("Disabling RedoxGuard v2.0...");
+        
+        // Shutdown async executor
+        if (asyncExecutor != null && !asyncExecutor.isShutdown()) {
+            asyncExecutor.shutdown();
+            try {
+                if (!asyncExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
+                    asyncExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                asyncExecutor.shutdownNow();
+            }
         }
         
-        // Log shutdown
-        LogUtil.info("RedoxGuard has been disabled!");
+        // Save player data
+        if (playerDataManager != null) {
+            playerDataManager.saveAllPlayerData();
+        }
+        
+        enabled = false;
+        LogUtil.info("RedoxGuard v2.0 has been disabled.");
     }
-    
+
     /**
-     * Get the plugin instance
-     * @return The plugin instance
+     * Initialize all managers
      */
+    private void initializeManagers() {
+        // Config manager
+        configManager = new ConfigManager(this);
+        
+        // Player data manager
+        playerDataManager = new PlayerDataManager(this);
+        
+        // Check manager
+        checkManager = new CheckManager(this);
+        
+        // Webhook util
+        webhookUtil = new WebhookUtil(this);
+    }
+
+    /**
+     * Register all listeners
+     */
+    private void registerListeners() {
+        // Player connection listener
+        getServer().getPluginManager().registerEvents(new PlayerConnectionListener(this), this);
+        
+        // Player movement listener (async)
+        getServer().getPluginManager().registerEvents(new PlayerMovementListener(this), this);
+    }
+
+    /**
+     * Register commands
+     */
+    private void registerCommands() {
+        getCommand("redoxguard").setExecutor(new com.kyssta.redoxguard.commands.RedoxGuardCommand(this));
+    }
+
+    /**
+     * Start async tasks
+     */
+    private void startAsyncTasks() {
+        // Player data cleanup task (every 5 minutes)
+        asyncExecutor.scheduleAtFixedRate(() -> {
+            if (enabled && playerDataManager != null) {
+                playerDataManager.cleanupInactivePlayers();
+            }
+        }, 5, 5, TimeUnit.MINUTES);
+        
+        // Performance monitoring task (every 30 seconds)
+        asyncExecutor.scheduleAtFixedRate(() -> {
+            if (enabled) {
+                monitorPerformance();
+            }
+        }, 30, 30, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Monitor plugin performance
+     */
+    private void monitorPerformance() {
+        int playerCount = Bukkit.getOnlinePlayers().size();
+        long memoryUsage = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        
+        LogUtil.debug("Performance: " + playerCount + " players, " + 
+                (memoryUsage / 1024 / 1024) + "MB memory usage");
+    }
+
+    // Getters
     public static RedoxGuard getInstance() {
         return instance;
     }
-    
-    /**
-     * Get the config manager
-     * @return The config manager
-     */
+
     public ConfigManager getConfigManager() {
         return configManager;
     }
-    
-    /**
-     * Get the player data manager
-     * @return The player data manager
-     */
+
     public PlayerDataManager getPlayerDataManager() {
         return playerDataManager;
     }
-    
-    /**
-     * Get the check manager
-     * @return The check manager
-     */
+
     public CheckManager getCheckManager() {
         return checkManager;
+    }
+
+    public WebhookUtil getWebhookUtil() {
+        return webhookUtil;
+    }
+
+    public ScheduledExecutorService getAsyncExecutor() {
+        return asyncExecutor;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 }

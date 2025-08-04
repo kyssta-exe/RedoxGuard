@@ -7,7 +7,14 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class SpeedCheck extends Check {
+
+    private final Map<UUID, Integer> violations = new HashMap<>();
+    private final Map<UUID, Long> lastCheckTime = new HashMap<>();
 
     public SpeedCheck(RedoxGuard plugin) {
         super(plugin, "Speed", "movement");
@@ -24,28 +31,58 @@ public class SpeedCheck extends Check {
             return;
         }
         
+        // Skip if player is in vehicle, flying, or has special permissions
+        if (player.isInsideVehicle() || player.getAllowFlight() || player.isFlying()) {
+            return;
+        }
+        
         PlayerData data = getPlayerData(player);
+        UUID uuid = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+        
+        // Rate limiting - only check every 500ms
+        Long lastCheck = lastCheckTime.get(uuid);
+        if (lastCheck != null && currentTime - lastCheck < 500) {
+            return;
+        }
+        lastCheckTime.put(uuid, currentTime);
         
         // Calculate horizontal distance moved
         double dx = to.getX() - from.getX();
         double dz = to.getZ() - from.getZ();
         double distanceSquared = dx * dx + dz * dz;
         
-        // Get maximum allowed speed
+        // Skip if no movement
+        if (distanceSquared < 0.01) {
+            return;
+        }
+        
+        // Get maximum allowed speed with generous limits
         double maxSpeed = getMaxAllowedSpeed(player);
         double maxSpeedSquared = maxSpeed * maxSpeed;
         
+        // Apply ping compensation (more generous)
+        int ping = data.getPing();
+        double pingCompensation = Math.min(ping / 200.0, 0.5); // Max 0.5 blocks compensation
+        maxSpeedSquared += pingCompensation * pingCompensation;
+        
         // Check if the player is moving too fast
         if (distanceSquared > maxSpeedSquared) {
-            // Calculate actual speed
-            double actualSpeed = Math.sqrt(distanceSquared);
+            int currentViolations = violations.getOrDefault(uuid, 0);
+            violations.put(uuid, currentViolations + 1);
             
-            // Flag the player
-            flag(player, "moved too fast (" + String.format("%.2f", actualSpeed) + " > " + 
-                    String.format("%.2f", maxSpeed) + ")");
-            
-            debug(player.getName() + " moved too fast: " + String.format("%.2f", actualSpeed) + 
-                    " > " + String.format("%.2f", maxSpeed));
+            // Only flag after multiple violations
+            if (currentViolations >= 3) {
+                double actualSpeed = Math.sqrt(distanceSquared);
+                flag(player, "moved too fast (" + String.format("%.2f", actualSpeed) + " > " + 
+                        String.format("%.2f", maxSpeed) + ")");
+                
+                debug(player.getName() + " moved too fast: " + String.format("%.2f", actualSpeed) + 
+                        " > " + String.format("%.2f", maxSpeed) + " (violations: " + currentViolations + ")");
+            }
+        } else {
+            // Reset violations if player is moving normally
+            violations.put(uuid, Math.max(0, violations.getOrDefault(uuid, 0) - 1));
         }
     }
     
@@ -55,31 +92,28 @@ public class SpeedCheck extends Check {
      * @return The maximum allowed speed
      */
     private double getMaxAllowedSpeed(Player player) {
-        // Base speed
-        double maxSpeed = 0.2873; // Normal walking speed
+        // Base speed - much more generous
+        double maxSpeed = 0.35; // Increased from 0.2873
         
         // Adjust for sprinting
         if (player.isSprinting()) {
-            maxSpeed *= 1.3; // Sprinting is about 30% faster
+            maxSpeed = 0.45; // More generous sprint speed
         }
         
         // Adjust for speed potion effect
         if (player.hasPotionEffect(PotionEffectType.SPEED)) {
             int level = player.getPotionEffect(PotionEffectType.SPEED).getAmplifier() + 1;
-            maxSpeed *= 1.0 + (level * 0.2); // Each level adds 20% speed
+            maxSpeed *= 1.0 + (level * 0.3); // Each level adds 30% speed (increased from 20%)
         }
         
         // Adjust for slowness potion effect
         if (player.hasPotionEffect(PotionEffectType.SLOW)) {
             int level = player.getPotionEffect(PotionEffectType.SLOW).getAmplifier() + 1;
-            maxSpeed *= 1.0 - (level * 0.15); // Each level reduces speed by 15%
+            maxSpeed *= 1.0 - (level * 0.1); // Each level reduces speed by 10% (reduced from 15%)
         }
         
-        // Add a small buffer for lag compensation
-        PlayerData data = getPlayerData(player);
-        int ping = data.getPing();
-        double pingCompensation = 1.0 + (ping / 1000.0); // Add 0.1% per ms of ping
-        maxSpeed *= pingCompensation;
+        // Add buffer for lag and server inconsistencies
+        maxSpeed *= 1.2; // 20% buffer
         
         return maxSpeed;
     }

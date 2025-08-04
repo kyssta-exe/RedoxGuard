@@ -7,7 +7,13 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class ReachCheck extends Check {
+
+    private final Map<UUID, Integer> reachViolations = new HashMap<>();
 
     public ReachCheck(RedoxGuard plugin) {
         super(plugin, "Reach", "combat");
@@ -23,7 +29,13 @@ public class ReachCheck extends Check {
             return;
         }
         
+        // Skip if target is not a player (reach hacks are mainly for PvP)
+        if (!(target instanceof Player)) {
+            return;
+        }
+        
         PlayerData data = getPlayerData(player);
+        UUID uuid = player.getUniqueId();
         
         // Calculate distance between player and target
         Location playerLoc = player.getEyeLocation();
@@ -31,22 +43,30 @@ public class ReachCheck extends Check {
         
         double distance = playerLoc.distance(targetLoc);
         
-        // Get maximum allowed reach distance from config
-        double maxReach = plugin.getConfigManager().getCheckConfig(getType())
-                .getDoubleValue("reach.max-distance", 3.1);
+        // Much more generous reach limit - 4.5 blocks instead of 3.1
+        double maxReach = 4.5;
         
-        // Add a small buffer for lag compensation
+        // Add generous ping compensation
         int ping = data.getPing();
-        double pingCompensation = ping / 1000.0; // Add 0.001 blocks per ms of ping
+        double pingCompensation = Math.min(ping / 100.0, 1.0); // Max 1 block compensation
         maxReach += pingCompensation;
         
         // Check if the player is reaching too far
         if (distance > maxReach) {
-            flag(player, "reached too far (" + String.format("%.2f", distance) + 
-                    " > " + String.format("%.2f", maxReach) + ")");
+            int currentViolations = reachViolations.getOrDefault(uuid, 0);
+            reachViolations.put(uuid, currentViolations + 1);
             
-            debug(player.getName() + " reached too far: " + String.format("%.2f", distance) + 
-                    " > " + String.format("%.2f", maxReach));
+            // Only flag after multiple violations
+            if (currentViolations >= 3) {
+                flag(player, "reached too far (" + String.format("%.2f", distance) + 
+                        " > " + String.format("%.2f", maxReach) + ")");
+                
+                debug(player.getName() + " reached too far: " + String.format("%.2f", distance) + 
+                        " > " + String.format("%.2f", maxReach) + " (violations: " + currentViolations + ")");
+            }
+        } else {
+            // Reset violations if player is not reaching too far
+            reachViolations.put(uuid, Math.max(0, reachViolations.getOrDefault(uuid, 0) - 1));
         }
     }
 }
