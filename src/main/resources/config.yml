@@ -1,48 +1,149 @@
-# RedoxGuard Configuration
-# Developed by Kyssta
+# ═══════════════════════════════════════════════════════════════════════════════
+#                              RedoxGuard Configuration
+#                           Advanced Anti-Cheat Solution
+#                              Developed by Kyssta
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This configuration file controls all aspects of RedoxGuard's behavior.
+# For detailed documentation, visit: https://github.com/kyssta-exe/RedoxGuard
+#
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# Debug mode - enables additional logging
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                              GENERAL SETTINGS                              │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Debug Mode
+# Enables detailed logging for troubleshooting and development
+# WARNING: This will generate a lot of console output!
 debug: false
 
-# Notify staff - sends violation notifications to players with redoxguard.notify permission
+# Staff Notifications
+# Send real-time violation alerts to players with 'redoxguard.notify' permission
+# Recommended: true (helps staff respond quickly to violations)
 notify-staff: true
 
-# Log violations - logs violations to the console
+# Violation Logging
+# Log all violations to console and log files for review
+# Recommended: true (essential for tracking and analysis)
 log-violations: true
 
-# Discord webhook - sends violation alerts to a Discord channel
-discord-webhook:
-  # Enable Discord webhook alerts
-  enabled: false
-  # Discord webhook URL
-  url: ""
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                           DISCORD INTEGRATION                              │
+# └─────────────────────────────────────────────────────────────────────────────┘
 
-# Violation decay - reduces violation levels over time
+# Discord Webhook Integration
+# Send violation alerts directly to your Discord server
+# Setup: Server Settings → Integrations → Webhooks → New Webhook
+discord-webhook:
+  # Enable Discord notifications
+  # Set to true after configuring your webhook URL
+  enabled: false
+  
+  # Discord Webhook URL
+  # Example: "https://discord.com/api/webhooks/123456789/abcdefghijklmnop"
+  # IMPORTANT: Keep this URL private and secure!
+  url: ""
+  
+  # Webhook Settings (Advanced)
+  # Username displayed for the bot messages
+  username: "RedoxGuard"
+  # Avatar URL for the bot (optional)
+  avatar-url: ""
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                           VIOLATION MANAGEMENT                             │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Violation Decay System
+# Automatically reduces violation levels over time for rehabilitated players
+# This prevents permanent punishment for occasional false positives
 violation-decay:
+  # Enable automatic violation decay
+  # Recommended: true (gives players a second chance)
   enabled: true
-  # Time in seconds between decay checks
+  
+  # Decay Check Interval
+  # How often to check and reduce violation levels (in seconds)
+  # Lower values = more frequent checks (higher CPU usage)
   interval: 60
-  # Amount to reduce violations by each interval
+  
+  # Decay Amount
+  # How much to reduce violation levels per interval
+  # Higher values = faster rehabilitation
   amount: 1
 
-# Latency compensation - adjusts checks based on player ping
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                          LATENCY COMPENSATION                              │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Smart Latency Compensation
+# Adjusts check sensitivity based on player ping to reduce false positives
+# Essential for servers with international players
 latency-compensation:
+  # Enable latency compensation
+  # Recommended: true (significantly reduces false positives)
   enabled: true
-  # Maximum ping to compensate for (in ms)
+  
+  # Maximum Ping Compensation
+  # Players with ping higher than this won't receive compensation
+  # Prevents abuse from artificially high ping
   max-ping: 500
+  
+  # Compensation Multiplier
+  # How much to adjust checks based on ping (0.1 = 10% per 100ms ping)
+  multiplier: 0.15
 
-# Exemptions
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                              EXEMPTIONS                                    │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Player Exemptions
+# Automatically exempt certain players from anticheat checks
 exemptions:
-  # Exempt players using Geyser/Floodgate (Bedrock players)
+  # Bedrock Edition Players
+  # Exempt players connecting via Geyser/Floodgate
+  # Bedrock has different movement mechanics that can trigger false positives
   bedrock-players: true
-  # Exempt players in creative mode
-  creative-mode: false
-  # Exempt players in spectator mode
-  spectator-mode: true
+  
+  # Creative & Spectator Mode
+  # Exempt players in creative or spectator mode
+  # These modes have different physics and movement rules
+  creative-spectator: true
+  
+  # Staff Members
+  # Exempt players with bypass permissions
+  # Useful for staff testing and administration
+  staff-bypass: true
 
-# Advanced settings
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                           PERFORMANCE SETTINGS                             │
+# └─────────────────────────────────────────────────────────────────────────────┘
+
+# Advanced Performance Configuration
+# Fine-tune RedoxGuard's behavior based on server performance
 advanced:
-  # Maximum TPS drop before reducing check sensitivity
-  min-tps: 17.5
-  # How much to reduce check sensitivity when TPS is low (0.0-1.0)
-  low-tps-sensitivity: 0.75
+  # Minimum Server TPS
+  # Disable intensive checks when server TPS drops below this value
+  # Prevents anticheat from worsening server lag
+  min-tps: 18.0
+  
+  # Low TPS Sensitivity
+  # How quickly to respond to TPS drops (0.1-1.0)
+  # Higher values = more aggressive performance protection
+  low-tps-sensitivity: 0.8
+  
+  # Check Frequency Multiplier
+  # Adjust how often checks run (1.0 = normal, 0.5 = half frequency)
+  # Lower values improve performance but may reduce detection accuracy
+  check-frequency: 1.0
+  
+  # Maximum Violations Per Second
+  # Limit violation processing to prevent spam
+  # Helps maintain performance during mass cheating events
+  max-violations-per-second: 10
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │                        END OF CONFIGURATION                                │
+# │                     RedoxGuard by Kyssta - 2024                           │
+# └─────────────────────────────────────────────────────────────────────────────┘

@@ -214,4 +214,4 @@ public class AdvancedTriggerBotCheck extends Check {
         public long[] getRecentAttacks() { return recentAttacks; }
         public int getTotalAttacks() { return totalAttacks; }
     }
-} 
+}

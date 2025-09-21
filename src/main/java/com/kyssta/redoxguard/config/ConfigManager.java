@@ -11,14 +11,51 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * ConfigManager - Centralized configuration management system for RedoxGuard
+ * 
+ * <p>The ConfigManager handles all configuration-related operations for the RedoxGuard
+ * anti-cheat system. It manages both the main plugin configuration and individual
+ * check configurations, providing a unified interface for accessing settings.
+ * 
+ * <p>Key responsibilities include:
+ * <ul>
+ *   <li>Loading and managing the main config.yml file</li>
+ *   <li>Creating and managing individual check configuration files</li>
+ *   <li>Providing version-compatible default configurations</li>
+ *   <li>Handling configuration validation and default value injection</li>
+ *   <li>Offering convenient accessor methods for common settings</li>
+ * </ul>
+ * 
+ * <p>The manager automatically creates default configurations for all check types
+ * and ensures backward compatibility across different Minecraft versions.</p>
+ * 
+ * @author Kyssta
+ * @version 1.0.0
+ * @since 1.0.0
+ */
 public class ConfigManager {
 
+    /** Reference to the main RedoxGuard plugin instance */
     private final RedoxGuard plugin;
+    
+    /** The main plugin configuration loaded from config.yml */
     private FileConfiguration config;
+    
+    /** File reference to the main configuration file */
     private File configFile;
     
+    /** Map storing all check-specific configurations by check type name */
     private final Map<String, CheckConfig> checkConfigs = new HashMap<>();
     
+    /**
+     * Constructs a new ConfigManager and initializes all configurations.
+     * 
+     * <p>This constructor automatically loads the main configuration and
+     * all check-specific configurations during instantiation.</p>
+     * 
+     * @param plugin the RedoxGuard plugin instance
+     */
     public ConfigManager(RedoxGuard plugin) {
         this.plugin = plugin;
         loadMainConfig();
@@ -26,23 +63,35 @@ public class ConfigManager {
     }
     
     /**
-     * Load the main configuration file
+     * Loads and initializes the main plugin configuration file.
+     * 
+     * <p>This method performs the following operations:
+     * <ol>
+     *   <li>Creates the default config.yml if it doesn't exist</li>
+     *   <li>Reloads the configuration from disk</li>
+     *   <li>Establishes file references for future operations</li>
+     *   <li>Injects any missing default values</li>
+     * </ol>
      */
     private void loadMainConfig() {
-        // Save default config if it doesn't exist
+        // Create default config.yml from plugin resources if missing
         plugin.saveDefaultConfig();
         
-        // Load config
+        // Reload configuration from disk to ensure latest values
         plugin.reloadConfig();
         config = plugin.getConfig();
         configFile = new File(plugin.getDataFolder(), "config.yml");
         
-        // Add default values if they don't exist
+        // Ensure all required configuration keys have default values
         addDefaultValues();
     }
     
     /**
-     * Add default values to the config if they don't exist
+     * Injects default values for any missing configuration keys.
+     * 
+     * <p>This method ensures backward compatibility by adding new configuration
+     * options with sensible defaults when they don't exist in existing config files.
+     * The configuration is automatically saved if any defaults are added.</p>
      */
     private void addDefaultValues() {
         boolean needsSave = false;
@@ -81,21 +130,36 @@ public class ConfigManager {
     }
     
     /**
-     * Load all check configurations
+     * Loads all check-specific configuration files from the checks directory.
+     * 
+     * <p>This method performs the following operations:
+     * <ol>
+     *   <li>Creates the checks directory if it doesn't exist</li>
+     *   <li>Generates default configuration files for all check categories</li>
+     *   <li>Loads all existing .yml files from the checks directory</li>
+     *   <li>Stores loaded configurations in the checkConfigs map for quick access</li>
+     * </ol>
+     * 
+     * <p>Check categories include:
+     * <ul>
+     *   <li><b>movement.yml</b> - Speed, Fly detection settings</li>
+     *   <li><b>combat.yml</b> - Combat-related check configurations</li>
+     *   <li><b>player.yml</b> - Player behavior and interaction settings</li>
+     * </ul>
      */
     private void loadCheckConfigs() {
-        // Create checks directory if it doesn't exist
+        // Ensure checks directory exists for configuration storage
         File checksDir = new File(plugin.getDataFolder(), "checks");
         if (!checksDir.exists()) {
             checksDir.mkdirs();
         }
         
-        // Create default check configs
+        // Generate default configurations for all check categories
         createDefaultCheckConfig("movement", checksDir);
         createDefaultCheckConfig("combat", checksDir);
         createDefaultCheckConfig("player", checksDir);
         
-        // Load all check configs
+        // Load and register all check configuration files
         for (File file : checksDir.listFiles()) {
             if (file.isFile() && file.getName().endsWith(".yml")) {
                 String name = file.getName().replace(".yml", "");
@@ -106,9 +170,21 @@ public class ConfigManager {
     }
     
     /**
-     * Create a default check configuration file
-     * @param name The name of the check
-     * @param directory The directory to create the file in
+     * Creates a default configuration file for a specific check category.
+     * 
+     * <p>This method generates comprehensive default configurations with:
+     * <ul>
+     *   <li>Enabled/disabled states for each check</li>
+     *   <li>Violation thresholds and punishment commands</li>
+     *   <li>Check-specific parameters (distances, timings, angles)</li>
+     *   <li>Version-specific compatibility handling</li>
+     * </ul>
+     * 
+     * <p>The method only creates files that don't already exist, preserving
+     * existing user configurations.</p>
+     * 
+     * @param name the check category name (movement, combat, player)
+     * @param directory the directory where the configuration file should be created
      */
     private void createDefaultCheckConfig(String name, File directory) {
         File file = new File(directory, name + ".yml");
@@ -218,7 +294,10 @@ public class ConfigManager {
     }
     
     /**
-     * Save the main configuration file
+     * Saves the main configuration file to disk.
+     * 
+     * <p>This method writes all current configuration values to the config.yml file.
+     * If an I/O error occurs during the save operation, it will be logged as a severe error.</p>
      */
     public void saveConfig() {
         try {
@@ -230,57 +309,87 @@ public class ConfigManager {
     }
     
     /**
-     * Get a check configuration
-     * @param name The name of the check
-     * @return The check configuration
+     * Retrieves a check-specific configuration by category name.
+     * 
+     * <p>Valid check category names include:
+     * <ul>
+     *   <li>"movement" - for Speed and Fly checks</li>
+     *   <li>"combat" - for Reach, KillAura, AutoCrystal, etc.</li>
+     *   <li>"player" - for Inventory, FastBreak, FastPlace, etc.</li>
+     * </ul>
+     * 
+     * @param name the check category name
+     * @return the CheckConfig instance for the specified category, or {@code null} if not found
      */
     public CheckConfig getCheckConfig(String name) {
         return checkConfigs.get(name);
     }
     
     /**
-     * Get the main configuration
-     * @return The main configuration
+     * Retrieves the main plugin configuration.
+     * 
+     * @return the FileConfiguration instance containing all main plugin settings
      */
     public FileConfiguration getConfig() {
         return config;
     }
     
     /**
-     * Check if debug mode is enabled
-     * @return True if debug mode is enabled
+     * Checks if debug mode is currently enabled.
+     * 
+     * <p>When debug mode is enabled, RedoxGuard will output detailed logging
+     * information to help with troubleshooting and development.</p>
+     * 
+     * @return {@code true} if debug mode is enabled, {@code false} otherwise
      */
     public boolean isDebugEnabled() {
         return config.getBoolean("debug");
     }
     
     /**
-     * Check if staff notifications are enabled
-     * @return True if staff notifications are enabled
+     * Checks if staff notifications are enabled.
+     * 
+     * <p>When enabled, players with the 'redoxguard.notify' permission will
+     * receive real-time violation alerts in chat.</p>
+     * 
+     * @return {@code true} if staff notifications are enabled, {@code false} otherwise
      */
     public boolean isNotifyStaffEnabled() {
         return config.getBoolean("notify-staff");
     }
     
     /**
-     * Check if violation logging is enabled
-     * @return True if violation logging is enabled
+     * Checks if violation logging is enabled.
+     * 
+     * <p>When enabled, all violations will be logged to the console and log files
+     * for administrative review and analysis. This is essential for tracking
+     * player behavior patterns and system performance.</p>
+     * 
+     * @return {@code true} if violation logging is enabled, {@code false} otherwise
      */
     public boolean isLogViolationsEnabled() {
         return config.getBoolean("log-violations");
     }
     
     /**
-     * Check if Discord webhook is enabled
-     * @return True if Discord webhook is enabled
+     * Checks if Discord webhook integration is enabled.
+     * 
+     * <p>When enabled, violation alerts will be sent to the configured Discord
+     * channel via webhook, allowing for real-time monitoring outside of the game.</p>
+     * 
+     * @return {@code true} if Discord webhook is enabled, {@code false} otherwise
      */
     public boolean isWebhookEnabled() {
         return config.getBoolean("discord-webhook.enabled");
     }
     
     /**
-     * Get the Discord webhook URL
-     * @return The Discord webhook URL
+     * Retrieves the configured Discord webhook URL.
+     * 
+     * <p>This URL is used to send violation notifications to a Discord channel.
+     * The URL should be obtained from Discord's Server Settings → Integrations → Webhooks.</p>
+     * 
+     * @return the Discord webhook URL, or an empty string if not configured
      */
     public String getWebhookUrl() {
         return config.getString("discord-webhook.url", "");

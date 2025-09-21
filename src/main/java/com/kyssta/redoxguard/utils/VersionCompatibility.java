@@ -3,15 +3,37 @@ package com.kyssta.redoxguard.utils;
 import org.bukkit.Material;
 
 /**
- * Utility class to handle version compatibility issues
- * Ensures the plugin works across Minecraft versions 1.13-1.21.x
+ * Utility class for handling Minecraft version compatibility across different server versions.
+ * <p>
+ * This class provides a centralized system for managing version-specific features and materials
+ * that were introduced in different Minecraft versions. It ensures RedoxGuard functions correctly
+ * across the supported version range (1.13-1.21.x) by:
+ * <ul>
+ *   <li>Detecting the availability of version-specific materials at startup</li>
+ *   <li>Providing safe access methods that prevent NoSuchFieldError exceptions</li>
+ *   <li>Enabling conditional check logic based on available game features</li>
+ *   <li>Supporting graceful degradation for older server versions</li>
+ * </ul>
+ * <p>
+ * The class uses static initialization to detect material availability once during plugin startup,
+ * avoiding repeated reflection calls during runtime for optimal performance.
+ * 
+ * @author RedoxGuard Team
+ * @version 1.0
+ * @since 1.0.0
  */
 public class VersionCompatibility {
 
-    // Store whether certain materials exist in this Minecraft version
+    /** Whether RESPAWN_ANCHOR material exists (introduced in 1.16) */
     private static boolean hasRespawnAnchor;
+    
+    /** Whether CORNFLOWER material exists (introduced in 1.14) */
     private static boolean hasCornflower;
+    
+    /** Whether LILY_OF_THE_VALLEY material exists (introduced in 1.14) */
     private static boolean hasLilyOfTheValley;
+    
+    /** Whether WITHER_ROSE material exists (introduced in 1.14) */
     private static boolean hasWitherRose;
     
     /**
@@ -51,32 +73,49 @@ public class VersionCompatibility {
     }
     
     /**
-     * Check if the RESPAWN_ANCHOR material exists in this version
-     * @return true if the material exists
+     * Checks if the RESPAWN_ANCHOR material is available in the current Minecraft version.
+     * <p>
+     * The Respawn Anchor was introduced in Minecraft 1.16 (Nether Update) and is used
+     * by the AutoAnchor check to detect anchor-based hacking. This method allows the
+     * check to gracefully disable itself on older versions.
+     * 
+     * @return {@code true} if RESPAWN_ANCHOR material exists, {@code false} on versions prior to 1.16
      */
     public static boolean hasRespawnAnchor() {
         return hasRespawnAnchor;
     }
     
     /**
-     * Check if the CORNFLOWER material exists in this version
-     * @return true if the material exists
+     * Checks if the CORNFLOWER material is available in the current Minecraft version.
+     * <p>
+     * The Cornflower was introduced in Minecraft 1.14 (Village & Pillage Update) as part
+     * of the new flower varieties. This method enables version-specific material handling.
+     * 
+     * @return {@code true} if CORNFLOWER material exists, {@code false} on versions prior to 1.14
      */
     public static boolean hasCornflower() {
         return hasCornflower;
     }
     
     /**
-     * Check if the LILY_OF_THE_VALLEY material exists in this version
-     * @return true if the material exists
+     * Checks if the LILY_OF_THE_VALLEY material is available in the current Minecraft version.
+     * <p>
+     * The Lily of the Valley was introduced in Minecraft 1.14 (Village & Pillage Update)
+     * as part of the new flower varieties. This method enables version-specific material handling.
+     * 
+     * @return {@code true} if LILY_OF_THE_VALLEY material exists, {@code false} on versions prior to 1.14
      */
     public static boolean hasLilyOfTheValley() {
         return hasLilyOfTheValley;
     }
     
     /**
-     * Check if the WITHER_ROSE material exists in this version
-     * @return true if the material exists
+     * Checks if the WITHER_ROSE material is available in the current Minecraft version.
+     * <p>
+     * The Wither Rose was introduced in Minecraft 1.14 (Village & Pillage Update) as a
+     * unique flower that damages entities. This method enables version-specific material handling.
+     * 
+     * @return {@code true} if WITHER_ROSE material exists, {@code false} on versions prior to 1.14
      */
     public static boolean hasWitherRose() {
         return hasWitherRose;

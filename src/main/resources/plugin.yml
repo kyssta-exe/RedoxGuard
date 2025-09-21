@@ -1,9 +1,17 @@
 name: RedoxGuard
-version: 1.0.0
+version: 1.0.1
 main: com.kyssta.redoxguard.RedoxGuard
 api-version: 1.16
 authors: [Kyssta]
-description: An advanced anticheat solution for Minecraft servers
+website: https://github.com/kyssta-exe/RedoxGuard
+description: >
+  Advanced Anti-Cheat Solution for Minecraft Servers.
+  Comprehensive protection against movement, combat, and player behavior exploits.
+  Features intelligent detection algorithms, latency compensation, and Discord integration.
+  Developed by Kyssta for secure and fair gaming environments.
+prefix: RedoxGuard
+load: STARTUP
+softdepend: [PlaceholderAPI]
 commands:
   redoxguard:
     description: Main command for RedoxGuard
@@ -11,8 +19,34 @@ commands:
     permission: redoxguard.admin
 permissions:
   redoxguard.admin:
-    description: Allows access to all RedoxGuard commands
+    description: Full access to all RedoxGuard commands and features
+    default: op
+    children:
+      - redoxguard.notify
+      - redoxguard.reload
+      - redoxguard.toggle
+      - redoxguard.violations
+      - redoxguard.debug
+  redoxguard.notify:
+    description: Receive in-game notifications when violations are detected
+    default: op
+  redoxguard.reload:
+    description: Allows reloading of configuration files
+    default: op
+  redoxguard.toggle:
+    description: Allows toggling checks on/off
+    default: op
+  redoxguard.violations:
+    description: Allows viewing player violation history
+    default: op
+  redoxguard.debug:
+    description: Allows toggling debug mode
     default: op
   redoxguard.bypass:
-    description: Bypasses all RedoxGuard checks
+    description: Bypasses all RedoxGuard anti-cheat checks (use with caution)
     default: false
+  redoxguard.bypass.*:
+    description: Bypasses all checks (wildcard permission)
+    default: false
+    children:
+      - redoxguard.bypass
